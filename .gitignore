@@ -17,6 +17,9 @@
 
 # Build artifacts
 /build/
+/bin/
+/obj/
+
 
 # Other
 /.env
