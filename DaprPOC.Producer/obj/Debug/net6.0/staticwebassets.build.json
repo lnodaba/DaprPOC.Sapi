@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "+WzVTCHYvunlzfXeNyMflBurwu7bL7zCfg4wYyxyPr8=",
+  "Source": "DaprPOC.Producer",
+  "BasePath": "_content/DaprPOC.Producer",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

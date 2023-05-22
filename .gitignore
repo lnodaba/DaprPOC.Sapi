@@ -1,0 +1,24 @@
+# C3 Project
+/c3/.c3/
+/c3/data/
+/c3/logs/
+/c3/package-lock.json
+/c3/node_modules/
+
+# Docker
+/.docker/
+/docker-compose.yml
+/docker-compose.override.yml
+/docker-compose.env
+
+# Docker Compose
+/docker-compose.override.yml
+/docker-compose.env
+
+# Build artifacts
+/build/
+
+# Other
+/.env
+/.env.local
+/.env.*.local

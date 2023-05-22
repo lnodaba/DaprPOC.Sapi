@@ -1,0 +1,295 @@
+name: dockercompose129466998782473044
+services:
+  daprpoc:
+    build:
+      context: E:\Sapi\DaprPOC
+      dockerfile: DaprPOC/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: DaprPOC
+      target: base
+    container_name: DaprPOC_1
+    entrypoint:
+    - tail
+    - -f
+    - /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      ASPNETCORE_URLS: https://+:443;http://+:80
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      NUGET_FALLBACK_PACKAGES: ""
+    image: daprpoc:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages  "/app/bin/Debug/net6.0/DaprPOC.dll"'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      protocol: tcp
+    - mode: ingress
+      target: 443
+      protocol: tcp
+    tty: true
+    volumes:
+    - type: bind
+      source: E:\Sapi\DaprPOC\DaprPOC
+      target: /app
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\vsdbg\vs2017u5
+      target: /remote_debugger
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/ASP.NET/Https
+      target: /root/.aspnet/https
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/Microsoft/UserSecrets
+      target: /root/.microsoft/usersecrets
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\.nuget\packages\
+      target: /root/.nuget/packages
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: E:\Sapi\DaprPOC
+      target: /src
+      bind:
+        create_host_path: true
+  daprpoc-dapr:
+    command:
+    - ./daprd
+    - -app-id
+    - daprpoc
+    - -app-port
+    - "80"
+    - -components-path
+    - ./components
+    depends_on:
+      daprpoc:
+        condition: service_started
+      rabbit-mq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    image: daprio/daprd:latest
+    network_mode: service:daprpoc
+    volumes:
+    - type: bind
+      source: E:\Sapi\DaprPOC\components
+      target: /components
+      bind:
+        create_host_path: true
+  daprpoc-dapr-producer:
+    command:
+    - ./daprd
+    - -app-id
+    - daprpoc-producer
+    - -app-port
+    - "80"
+    - -components-path
+    - ./components
+    depends_on:
+      daprpoc.producer:
+        condition: service_started
+      rabbit-mq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    image: daprio/daprd:latest
+    network_mode: service:daprpoc.producer
+    volumes:
+    - type: bind
+      source: E:\Sapi\DaprPOC\components
+      target: /components
+      bind:
+        create_host_path: true
+  daprpoc.producer:
+    build:
+      context: E:\Sapi\DaprPOC
+      dockerfile: DaprPOC.Producer/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: DaprPOC.Producer
+      target: base
+    container_name: DaprPOC.Producer
+    entrypoint:
+    - tail
+    - -f
+    - /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      ASPNETCORE_URLS: https://+:443;http://+:80
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      NUGET_FALLBACK_PACKAGES: ""
+    image: daprpocproducer:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages  "/app/bin/Debug/net6.0/DaprPOC.Producer.dll"'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      protocol: tcp
+    - mode: ingress
+      target: 443
+      protocol: tcp
+    tty: true
+    volumes:
+    - type: bind
+      source: E:\Sapi\DaprPOC\DaprPOC.Producer
+      target: /app
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\vsdbg\vs2017u5
+      target: /remote_debugger
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/ASP.NET/Https
+      target: /root/.aspnet/https
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/Microsoft/UserSecrets
+      target: /root/.microsoft/usersecrets
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\.nuget\packages\
+      target: /root/.nuget/packages
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: E:\Sapi\DaprPOC
+      target: /src
+      bind:
+        create_host_path: true
+  dozzle:
+    container_name: dozzle
+    environment:
+      DOZZLE_PASSWORD: test
+      DOZZLE_USERNAME: test
+    image: amir20/dozzle:latest
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 8080
+      published: "8082"
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      bind:
+        create_host_path: true
+  pgadmin:
+    container_name: pg-admin
+    depends_on:
+      postgres-db:
+        condition: service_started
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@test.com
+      PGADMIN_DEFAULT_PASSWORD: test
+      PGADMIN_LISTEN_PORT: "8081"
+    image: dpage/pgadmin4
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 8081
+      published: "8081"
+      protocol: tcp
+  postgres-db:
+    container_name: postgres-db
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+    image: postgres:13.9-alpine
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 5432
+      published: "5432"
+      protocol: tcp
+    restart: always
+    volumes:
+    - type: volume
+      source: db
+      target: /var/lib/postgresql/data
+      volume: {}
+  rabbit-mq:
+    container_name: rabbit-mq
+    environment:
+      RABBITMQ_DEFAULT_PASS: test
+      RABBITMQ_DEFAULT_USER: test
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmqctl
+      - status
+      timeout: 30s
+      interval: 30s
+      retries: 3
+    image: rabbitmq:3.9.4-management
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 5672
+      published: "5672"
+      protocol: tcp
+    - mode: ingress
+      target: 5673
+      published: "5673"
+      protocol: tcp
+    - mode: ingress
+      target: 15672
+      published: "15672"
+      protocol: tcp
+    - mode: ingress
+      target: 15674
+      published: "15674"
+      protocol: tcp
+    restart: always
+  redis:
+    hostname: redisstate
+    image: redis:alpine
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 6379
+      published: "6379"
+      protocol: tcp
+networks:
+  default:
+    name: dockercompose129466998782473044_default
+volumes:
+  db:
+    name: dockercompose129466998782473044_db

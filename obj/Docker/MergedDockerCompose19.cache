@@ -1,0 +1,157 @@
+name: dockercompose129466998782473044
+services:
+  daprpoc:
+    build:
+      context: E:\Sapi\DaprPOC
+      dockerfile: DaprPOC/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: https://+:443;http://+:80
+    image: daprpoc
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      protocol: tcp
+    - mode: ingress
+      target: 443
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/Microsoft/UserSecrets
+      target: /root/.microsoft/usersecrets
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/ASP.NET/Https
+      target: /root/.aspnet/https
+      read_only: true
+      bind:
+        create_host_path: true
+  daprpoc.producer:
+    build:
+      context: E:\Sapi\DaprPOC
+      dockerfile: DaprPOC.Producer/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: https://+:443;http://+:80
+    image: daprpocproducer
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 80
+      protocol: tcp
+    - mode: ingress
+      target: 443
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/Microsoft/UserSecrets
+      target: /root/.microsoft/usersecrets
+      read_only: true
+      bind:
+        create_host_path: true
+    - type: bind
+      source: C:\Users\lnoda\AppData\Roaming/ASP.NET/Https
+      target: /root/.aspnet/https
+      read_only: true
+      bind:
+        create_host_path: true
+  dozzle:
+    container_name: dozzle
+    environment:
+      DOZZLE_PASSWORD: test
+      DOZZLE_USERNAME: test
+    image: amir20/dozzle:latest
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 8080
+      published: "8082"
+      protocol: tcp
+    volumes:
+    - type: bind
+      source: /var/run/docker.sock
+      target: /var/run/docker.sock
+      bind:
+        create_host_path: true
+  pgadmin:
+    container_name: pg-admin
+    depends_on:
+      postgres-db:
+        condition: service_started
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@test.com
+      PGADMIN_DEFAULT_PASSWORD: test
+      PGADMIN_LISTEN_PORT: "8081"
+    image: dpage/pgadmin4
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 8081
+      published: "8081"
+      protocol: tcp
+  postgres-db:
+    container_name: postgres-db
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+    image: postgres:13.9-alpine
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 5432
+      published: "5432"
+      protocol: tcp
+    restart: always
+    volumes:
+    - type: volume
+      source: db
+      target: /var/lib/postgresql/data
+      volume: {}
+  rabbit-mq:
+    container_name: rabbit-mq
+    environment:
+      RABBITMQ_DEFAULT_PASS: test
+      RABBITMQ_DEFAULT_USER: test
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmqctl
+      - status
+      timeout: 30s
+      interval: 30s
+      retries: 3
+    image: rabbitmq:3.9.4-management
+    networks:
+      default: null
+    ports:
+    - mode: ingress
+      target: 5672
+      published: "5672"
+      protocol: tcp
+    - mode: ingress
+      target: 5673
+      published: "5673"
+      protocol: tcp
+    - mode: ingress
+      target: 15672
+      published: "15672"
+      protocol: tcp
+    - mode: ingress
+      target: 15674
+      published: "15674"
+      protocol: tcp
+    restart: always
+networks:
+  default:
+    name: dockercompose129466998782473044_default
+volumes:
+  db:
+    name: dockercompose129466998782473044_db
