@@ -19,7 +19,11 @@
 /build/
 /bin/
 /obj/
-
+/DaprPOC/obj
+/DaprPOC/obj/
+/DaprPOC/bin/
+/DaprPOC.Producer/obj/
+/DaprPOC.Producer/bin/
 
 # Other
 /.env
