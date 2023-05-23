@@ -316,3 +316,10 @@ public record Order([property: JsonPropertyName("orderId")] int OrderId);
     }
 ```
 
+11) Add Redis Cache Read Write Example.
+
+12) Add Posgres Support.
+
+13) Add Migrations.
+
+14) Test everything again from begining to end.

@@ -30,3 +30,7 @@
 /.env
 /.env.local
 /.env.*.local
+
+/obj/
+.vs/
+/bin/Debug/*
