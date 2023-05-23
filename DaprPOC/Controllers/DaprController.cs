@@ -21,6 +21,8 @@ namespace DaprPOC.Controllers
         public int orderId { get; set; }
     }
 
+
+    [ApiController]
     public class DaprController : Controller
     {
         public DaprController()
