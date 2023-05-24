@@ -7,6 +7,8 @@ Steps:
 1) Create as many project as you want in visual studio.
 2) Dockerize the APPs in visual studio.
 3) Add Docker compose support for the projects in visual studio.
+ You might want to add your custom port bindings in the compose override.
+ 
 4) Add centralized logging so we can see the logs for the cluster
 
 ```
@@ -318,8 +320,192 @@ public record Order([property: JsonPropertyName("orderId")] int OrderId);
 
 11) Add Redis Cache Read Write Example.
 
-12) Add Posgres Support.
+```
+[HttpGet]
+        public async Task<IActionResult> GetStateTest()
+        {
+            var DAPR_STORE_NAME = "default";
+            Random random = new Random();
+            int orderId = random.Next(1, 1000);
 
-13) Add Migrations.
+            //Using Dapr SDK to save and get state
+            using var client = new DaprClientBuilder().Build();
+
+            await client.SaveStateAsync(DAPR_STORE_NAME, "order_1", orderId.ToString());
+
+            var result = await client.GetStateAsync<string>(DAPR_STORE_NAME, "order_1");
+
+            return Ok("Result after get: " + result);
+        }
+```
+
+12) Add Posgres Support.
+https://jasonwatmore.com/post/2022/06/23/net-6-connect-to-postgresql-database-with-entity-framework-core
+
+Add Package: Npgsql.EntityFrameworkCore.PostgreSQL
+			Microsoft.EntityFrameworkCore.Design
+
+Create DBContext:
+
+```
+    public class MyDbContext : DbContext
+    {
+        protected readonly IConfiguration Configuration;
+
+        public MyDbContext(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder options)
+        {
+            // connect to postgres with connection string from app settings
+            options.UseNpgsql(Configuration.GetConnectionString("WebApiDatabase"));
+        }
+
+        public DbSet<Cage> Cages { get; set; }
+    }
+```
+
+Add Cages Model:
+
+```
+   public class Cage
+    {
+        [Key]
+        public int Id { get; set; }
+        public string ExternalId { get; set; }
+        public string Name { get; set; }
+    }
+```
+
+Add Connection string to appsettings.json explain the connection string.
+
+```
+  "ConnectionStrings": {
+    "WebApiDatabase": "Host=postgres-db; Database=crud-db; Username=test; Password=test"
+  },
+```
+
+Add migrations:
+
+dotnet ef migrations add InitialCreate -o Infrastructure/Migrations
+
+Register DBContext in IoC Container and add Auto migrate to the project, all of this code should go to the `Program.cs`
+
+```
+builder.Services.AddDbContext<MyDbContext>();
+
+MigrateDb(app);
+
+static void MigrateDb(IApplicationBuilder app)
+{
+    using var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope();
+    serviceScope.ServiceProvider.GetRequiredService<MyDbContext>().Database.Migrate();
+}
+
+```
+
+Check in Pg Admin that you have the DB.
+
+13) Add CRUD Endpoint for Cages:
+
+```
+[ApiController]
+    [Route("api/[controller]")]
+    public class CageController : ControllerBase
+    {
+        private readonly MyDbContext _dbContext;
+
+        public CageController(MyDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        // GET: api/cage
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Cage>>> GetCages()
+        {
+            var cages = await _dbContext.Cages.ToListAsync();
+            return Ok(cages);
+        }
+
+        // GET: api/cage/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Cage>> GetCage(int id)
+        {
+            var cage = await _dbContext.Cages.FindAsync(id);
+
+            if (cage == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(cage);
+        }
+
+        // POST: api/cage
+        [HttpPost]
+        public async Task<ActionResult<Cage>> CreateCage(Cage cage)
+        {
+            _dbContext.Cages.Add(cage);
+            await _dbContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetCage), new { id = cage.Id }, cage);
+        }
+
+        // PUT: api/cage/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateCage(int id, Cage cage)
+        {
+            if (id != cage.Id)
+            {
+                return BadRequest();
+            }
+
+            _dbContext.Entry(cage).State = EntityState.Modified;
+
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CageExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/cage/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCage(int id)
+        {
+            var cage = await _dbContext.Cages.FindAsync(id);
+
+            if (cage == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Cages.Remove(cage);
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool CageExists(int id)
+        {
+            return _dbContext.Cages.Any(e => e.Id == id);
+        }
+    }
+```
 
 14) Test everything again from begining to end.

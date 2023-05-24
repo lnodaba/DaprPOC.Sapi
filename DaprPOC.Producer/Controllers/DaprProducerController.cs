@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Text;
 using Dapr.Client;
+using static Dapr.Client.Autogen.Grpc.v1.Dapr;
 
 namespace DaprPOC.Producer.Controllers
 {
@@ -63,6 +64,23 @@ namespace DaprPOC.Producer.Controllers
 
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStateTest()
+        {
+            var DAPR_STORE_NAME = "default";
+            Random random = new Random();
+            int orderId = random.Next(1, 1000);
+
+            //Using Dapr SDK to save and get state
+            using var client = new DaprClientBuilder().Build();
+
+            await client.SaveStateAsync(DAPR_STORE_NAME, "order_1", orderId.ToString());
+
+            var result = await client.GetStateAsync<string>(DAPR_STORE_NAME, "order_1");
+
+            return Ok("Result after get: " + result);
         }
     }
 }
